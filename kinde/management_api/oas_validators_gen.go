@@ -1278,6 +1278,27 @@ func (s GetPermissionsSort) Validate() error {
 	}
 }
 
+func (s GetPortalLinkSubnav) Validate() error {
+	switch s {
+	case "profile":
+		return nil
+	case "organization_details":
+		return nil
+	case "organization_payment_details":
+		return nil
+	case "organization_plan_selection":
+		return nil
+	case "payment_details":
+		return nil
+	case "plan_details":
+		return nil
+	case "plan_selection":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
 func (s GetPropertiesContext) Validate() error {
 	switch s {
 	case "usr":
@@ -1562,6 +1583,88 @@ func (s SetUserPasswordReqSaltPosition) Validate() error {
 	}
 }
 
+func (s *TokenIntrospectionReq) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if value, ok := s.TokenTypeHint.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "token_type_hint",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s TokenIntrospectionReqTokenTypeHint) Validate() error {
+	switch s {
+	case "access_token":
+		return nil
+	case "refresh_token":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s *TokenRevocationReq) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if value, ok := s.TokenTypeHint.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "token_type_hint",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s TokenRevocationReqTokenTypeHint) Validate() error {
+	switch s {
+	case "access_token":
+		return nil
+	case "refresh_token":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
 func (s *UpdateAPIApplicationsReq) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
@@ -1695,7 +1798,7 @@ func (s UpdateOrganizationSessionsReqSSOSessionPersistenceMode) Validate() error
 	switch s {
 	case "persistent":
 		return nil
-	case "non-persistent":
+	case "non_persistent":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)

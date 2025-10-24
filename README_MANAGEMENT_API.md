@@ -6,6 +6,29 @@ This guide explains how to connect to and use the Kinde Management API with the 
 
 The Kinde Management API allows you to programmatically manage your Kinde tenant, including creating applications, managing users, configuring settings, and more. This API is designed for machine-to-machine (M2M) communication and requires proper authentication and authorization.
 
+## Code Generation
+
+The Management API client code is automatically generated from the OpenAPI specification at `https://kinde.com/api/kinde-mgmt-api-specs.yaml` using [ogen](https://github.com/ogen-go/ogen). This ensures the client is always up-to-date with the latest API changes.
+
+To regenerate the API code:
+
+```bash
+# Install required tools
+make install-tools
+
+# Generate API code
+make generate
+
+# Build the project (includes generation)
+make build
+```
+
+The generated code is located in the `kinde/management_api` package and includes:
+- Type-safe request/response structures
+- Client interfaces and implementations
+- Comprehensive error handling
+- OpenTelemetry integration
+
 ## Prerequisites
 
 - A Kinde account with a tenant

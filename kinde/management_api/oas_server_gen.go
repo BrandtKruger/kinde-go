@@ -717,6 +717,18 @@ type Handler interface {
 	//
 	// GET /api/v1/connections
 	GetConnections(ctx context.Context, params GetConnectionsParams) (GetConnectionsRes, error)
+	// GetEntitlement implements GetEntitlement operation.
+	//
+	// Returns a single entitlement by the feature key.
+	//
+	// GET /account_api/v1/entitlement
+	GetEntitlement(ctx context.Context, params GetEntitlementParams) (GetEntitlementRes, error)
+	// GetEntitlements implements GetEntitlements operation.
+	//
+	// Returns all the entitlements a the user currently has access to.
+	//
+	// GET /account_api/v1/entitlements
+	GetEntitlements(ctx context.Context, params GetEntitlementsParams) (GetEntitlementsRes, error)
 	// GetEnvironementFeatureFlags implements GetEnvironementFeatureFlags operation.
 	//
 	// Get environment feature flags.
@@ -772,6 +784,12 @@ type Handler interface {
 	//
 	// GET /api/v1/event_types
 	GetEventTypes(ctx context.Context) (GetEventTypesRes, error)
+	// GetFeatureFlags implements GetFeatureFlags operation.
+	//
+	// Returns all the feature flags that affect the user.
+	//
+	// GET /account_api/v1/feature_flags
+	GetFeatureFlags(ctx context.Context, params GetFeatureFlagsParams) (GetFeatureFlagsRes, error)
 	// GetIdentity implements GetIdentity operation.
 	//
 	// Returns an identity by ID
@@ -891,6 +909,13 @@ type Handler interface {
 	//
 	// GET /api/v1/permissions
 	GetPermissions(ctx context.Context, params GetPermissionsParams) (GetPermissionsRes, error)
+	// GetPortalLink implements GetPortalLink operation.
+	//
+	// Returns a link to the self-serve portal for the authenticated user. The user can use this link to
+	// manage their account, update their profile, and view their entitlements.
+	//
+	// GET /account_api/v1/portal_link
+	GetPortalLink(ctx context.Context, params GetPortalLinkParams) (GetPortalLinkRes, error)
 	// GetProperties implements GetProperties operation.
 	//
 	// Returns a list of properties
@@ -986,6 +1011,25 @@ type Handler interface {
 	//
 	// GET /api/v1/users/{user_id}/identities
 	GetUserIdentities(ctx context.Context, params GetUserIdentitiesParams) (GetUserIdentitiesRes, error)
+	// GetUserPermissions implements GetUserPermissions operation.
+	//
+	// Returns all the permissions the user has.
+	//
+	// GET /account_api/v1/permissions
+	GetUserPermissions(ctx context.Context, params GetUserPermissionsParams) (GetUserPermissionsRes, error)
+	// GetUserProfileV2 implements getUserProfileV2 operation.
+	//
+	// This endpoint returns a user's ID, names, profile picture URL and email of the currently logged in
+	// user.
+	//
+	// GET /oauth2/v2/user_profile
+	GetUserProfileV2(ctx context.Context) (GetUserProfileV2Res, error)
+	// GetUserProperties implements GetUserProperties operation.
+	//
+	// Returns all properties for the user.
+	//
+	// GET /account_api/v1/properties
+	GetUserProperties(ctx context.Context, params GetUserPropertiesParams) (GetUserPropertiesRes, error)
 	// GetUserPropertyValues implements GetUserPropertyValues operation.
 	//
 	// Gets properties for an user by ID.
@@ -995,6 +1039,12 @@ type Handler interface {
 	//
 	// GET /api/v1/users/{user_id}/properties
 	GetUserPropertyValues(ctx context.Context, params GetUserPropertyValuesParams) (GetUserPropertyValuesRes, error)
+	// GetUserRoles implements GetUserRoles operation.
+	//
+	// Returns all roles for the user.
+	//
+	// GET /account_api/v1/roles
+	GetUserRoles(ctx context.Context, params GetUserRolesParams) (GetUserRolesRes, error)
 	// GetUserSessions implements GetUserSessions operation.
 	//
 	// Retrieve the list of active sessions for a specific user.
@@ -1216,6 +1266,19 @@ type Handler interface {
 	//
 	// PUT /api/v1/users/{user_id}/password
 	SetUserPassword(ctx context.Context, req *SetUserPasswordReq, params SetUserPasswordParams) (SetUserPasswordRes, error)
+	// TokenIntrospection implements tokenIntrospection operation.
+	//
+	// Retrieve information about the provided token.
+	//
+	// POST /oauth2/introspect
+	TokenIntrospection(ctx context.Context, req *TokenIntrospectionReq) (TokenIntrospectionRes, error)
+	// TokenRevocation implements tokenRevocation operation.
+	//
+	// Use this endpoint to invalidate an access or refresh token. The token will no longer be valid for
+	// use.
+	//
+	// POST /oauth2/revoke
+	TokenRevocation(ctx context.Context, req *TokenRevocationReq) (TokenRevocationRes, error)
 	// UpdateAPIApplications implements updateAPIApplications operation.
 	//
 	// Authorize applications to be allowed to request access tokens for an API

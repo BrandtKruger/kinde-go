@@ -10,6 +10,26 @@ The Kinde SDK for Go.
 
 Requires Go 1.24+
 
+### Code Generation
+
+The Management API code is automatically generated from the OpenAPI specification. To regenerate the API code:
+
+```bash
+# Install required tools
+make install-tools
+
+# Generate API code
+make generate
+
+# Build the project (includes generation)
+make build
+
+# Run tests (includes generation)
+make test
+```
+
+The generation process uses [ogen](https://github.com/ogen-go/ogen) to create type-safe Go code from the Kinde Management API OpenAPI specification.
+
 ## OAuth 2.0 Flows
 
 For comprehensive information about OAuth 2.0 flows and how to choose the right flow for your application, see [OAuth 2.0 flows explained](https://kinde.com/learn/authentication/protocols/oauth-flows-explained/).
