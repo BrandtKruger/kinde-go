@@ -16,13 +16,13 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.22'
+        go-version: '1.24'
 
-#    - name: Build
-#      run: go build -v ./...
+    - name: Install tools and generate code
+      run: make install-tools
 
-    - name: Test
-      run: go test -v ./...
+    - name: Generate, build and test
+      run: make all
 
     - id: govulncheck
       uses: golang/govulncheck-action@v1
