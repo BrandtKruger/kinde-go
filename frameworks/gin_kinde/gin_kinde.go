@@ -151,7 +151,9 @@ func UseKindeAuth(router *gin.RouterGroup, kindeDomain, clientID, clientSecret, 
 			if kindeClient, ok := client.(*authorization_code.AuthorizationCodeFlow); ok {
 
 				if isAuthenticated, _ := kindeClient.IsAuthenticated(context.Background()); !isAuthenticated {
-					authURL := kindeClient.GetAuthURL()
+					// Check for invitation_code query parameter
+					invitationCode := ctx.Query("invitation_code")
+					authURL := kindeClient.GetAuthURLWithInvitation(invitationCode)
 					ctx.Redirect(302, authURL)
 					ctx.Abort()
 				}

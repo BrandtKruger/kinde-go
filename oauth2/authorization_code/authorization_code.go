@@ -42,6 +42,10 @@ type (
 	IAuthorizationCodeFlow interface {
 		// Logout clears the session and token.
 		GetAuthURL() string
+		// GetAuthURLWithInvitation returns the URL to redirect the user to start authentication pipeline
+		// with invitation code support. If invitationCode is provided, it will include both
+		// invitation_code and is_invitation parameters in the auth URL.
+		GetAuthURLWithInvitation(invitationCode string) string
 		// Exchanges the authorization code for a token and establishes KindeContext.
 		ExchangeCode(ctx context.Context, authorizationCode string, receivedState string) error
 		// Returns http client to call external services, will refresh token behind the scenes if offline is requested.
@@ -133,7 +137,13 @@ func (flow *AuthorizationCodeFlow) StartDeviceAuth(ctx context.Context) (*oauth2
 
 // Returns the URL to redirect the user to start authentication pipeline.
 func (flow *AuthorizationCodeFlow) GetAuthURL() string {
+	return flow.GetAuthURLWithInvitation("")
+}
 
+// GetAuthURLWithInvitation returns the URL to redirect the user to start authentication pipeline
+// with invitation code support. If invitationCode is provided, it will include both
+// invitation_code and is_invitation parameters in the auth URL.
+func (flow *AuthorizationCodeFlow) GetAuthURLWithInvitation(invitationCode string) string {
 	state := flow.stateGenerator(flow)
 	url, _ := url.Parse(flow.config.AuthCodeURL(state))
 	query := url.Query()
@@ -141,6 +151,12 @@ func (flow *AuthorizationCodeFlow) GetAuthURL() string {
 		if query.Get(k) == "" {
 			query[k] = v
 		}
+	}
+
+	// Add invitation code parameters if provided
+	if invitationCode != "" {
+		query.Set("invitation_code", invitationCode)
+		query.Set("is_invitation", "true")
 	}
 
 	// Add PKCE parameters if enabled

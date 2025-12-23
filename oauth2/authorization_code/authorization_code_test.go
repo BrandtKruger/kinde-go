@@ -88,6 +88,87 @@ func TestAutorizationCodeFlowClient(t *testing.T) {
 
 }
 
+func TestGetAuthURLWithInvitation(t *testing.T) {
+	assert := assert.New(t)
+
+	testBackendServerURL := "https://api.com"
+	testKindeServerURL := "https://mytest.kinde.com"
+
+	callbackURL := fmt.Sprintf("%v/callback", testBackendServerURL)
+	kindeAuthFlow, _ := NewAuthorizationCodeFlow(
+		testKindeServerURL, "b9da18c441b44d81bab3e8232de2e18d", "client_secret", callbackURL,
+		WithSessionHooks(newTestSessionHooks()),
+		WithCustomStateGenerator(func(*AuthorizationCodeFlow) string { return "test_state" }),
+	)
+
+	// Test with invitation code
+	invitationCode := "inv_123456789"
+	authURL := kindeAuthFlow.GetAuthURLWithInvitation(invitationCode)
+	assert.NotEmpty(authURL, "AuthURL cannot be empty")
+	assert.Contains(authURL, "invitation_code=inv_123456789", "AuthURL should contain invitation_code parameter")
+	assert.Contains(authURL, "is_invitation=true", "AuthURL should contain is_invitation parameter")
+
+	// Test without invitation code (empty string)
+	authURLNoInvitation := kindeAuthFlow.GetAuthURLWithInvitation("")
+	assert.NotEmpty(authURLNoInvitation, "AuthURL cannot be empty")
+	assert.NotContains(authURLNoInvitation, "invitation_code", "AuthURL should not contain invitation_code when empty")
+	assert.NotContains(authURLNoInvitation, "is_invitation", "AuthURL should not contain is_invitation when empty")
+}
+
+func TestWithInvitationCodeOption(t *testing.T) {
+	assert := assert.New(t)
+
+	testBackendServerURL := "https://api.com"
+	testKindeServerURL := "https://mytest.kinde.com"
+
+	callbackURL := fmt.Sprintf("%v/callback", testBackendServerURL)
+	invitationCode := "inv_987654321"
+	kindeAuthFlow, _ := NewAuthorizationCodeFlow(
+		testKindeServerURL, "b9da18c441b44d81bab3e8232de2e18d", "client_secret", callbackURL,
+		WithSessionHooks(newTestSessionHooks()),
+		WithCustomStateGenerator(func(*AuthorizationCodeFlow) string { return "test_state" }),
+		WithInvitationCode(invitationCode),
+	)
+
+	flow := kindeAuthFlow.(*AuthorizationCodeFlow)
+	invitationCodeValues, hasInvitationCode := flow.authURLOptions["invitation_code"]
+	assert.True(hasInvitationCode, "invitation_code should be set in authURLOptions")
+	if hasInvitationCode {
+		assert.Contains(invitationCodeValues, invitationCode, "invitation_code should contain the provided value")
+	}
+
+	isInvitationValues, hasIsInvitation := flow.authURLOptions["is_invitation"]
+	assert.True(hasIsInvitation, "is_invitation should be set in authURLOptions")
+	if hasIsInvitation {
+		assert.Contains(isInvitationValues, "true", "is_invitation should be set to 'true'")
+	}
+
+	authURL := kindeAuthFlow.GetAuthURL()
+	assert.Contains(authURL, "invitation_code=inv_987654321", "AuthURL should contain invitation_code parameter")
+	assert.Contains(authURL, "is_invitation=true", "AuthURL should contain is_invitation parameter")
+}
+
+func TestWithInvitationCodeOptionEmpty(t *testing.T) {
+	assert := assert.New(t)
+
+	testBackendServerURL := "https://api.com"
+	testKindeServerURL := "https://mytest.kinde.com"
+
+	callbackURL := fmt.Sprintf("%v/callback", testBackendServerURL)
+	kindeAuthFlow, _ := NewAuthorizationCodeFlow(
+		testKindeServerURL, "b9da18c441b44d81bab3e8232de2e18d", "client_secret", callbackURL,
+		WithSessionHooks(newTestSessionHooks()),
+		WithCustomStateGenerator(func(*AuthorizationCodeFlow) string { return "test_state" }),
+		WithInvitationCode(""), // Empty invitation code should not add parameters
+	)
+
+	flow := kindeAuthFlow.(*AuthorizationCodeFlow)
+	_, hasInvitationCode := flow.authURLOptions["invitation_code"]
+	_, hasIsInvitation := flow.authURLOptions["is_invitation"]
+	assert.False(hasInvitationCode, "invitation_code should not be set when empty")
+	assert.False(hasIsInvitation, "is_invitation should not be set when empty")
+}
+
 func getTestAuthorizationServer() *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
