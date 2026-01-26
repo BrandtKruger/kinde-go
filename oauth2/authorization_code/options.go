@@ -145,11 +145,12 @@ func WithPKCEChallengeMethod(method string) Option {
 
 // WithInvitationCode sets the invitation code and is_invitation parameters for team member invitations.
 // When an invitation code is provided, is_invitation will be set to "true".
+// If called multiple times, it will overwrite the previous values instead of accumulating them.
 func WithInvitationCode(invitationCode string) Option {
 	return func(s *AuthorizationCodeFlow) {
 		if invitationCode != "" {
-			WithAuthParameter("invitation_code", invitationCode)(s)
-			WithAuthParameter("is_invitation", "true")(s)
+			s.authURLOptions.Set("invitation_code", invitationCode)
+			s.authURLOptions.Set("is_invitation", "true")
 		}
 	}
 }

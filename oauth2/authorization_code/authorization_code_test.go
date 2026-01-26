@@ -169,6 +169,42 @@ func TestWithInvitationCodeOptionEmpty(t *testing.T) {
 	assert.False(hasIsInvitation, "is_invitation should not be set when empty")
 }
 
+func TestWithInvitationCodeOptionOverwrite(t *testing.T) {
+	assert := assert.New(t)
+
+	testBackendServerURL := "https://api.com"
+	testKindeServerURL := "https://mytest.kinde.com"
+
+	callbackURL := fmt.Sprintf("%v/callback", testBackendServerURL)
+	firstInvitationCode := "inv_111111111"
+	secondInvitationCode := "inv_222222222"
+	kindeAuthFlow, _ := NewAuthorizationCodeFlow(
+		testKindeServerURL, "b9da18c441b44d81bab3e8232de2e18d", "client_secret", callbackURL,
+		WithSessionHooks(newTestSessionHooks()),
+		WithCustomStateGenerator(func(*AuthorizationCodeFlow) string { return "test_state" }),
+		WithInvitationCode(firstInvitationCode),
+		WithInvitationCode(secondInvitationCode), // Should overwrite, not accumulate
+	)
+
+	flow := kindeAuthFlow.(*AuthorizationCodeFlow)
+	invitationCodeValues, hasInvitationCode := flow.authURLOptions["invitation_code"]
+	assert.True(hasInvitationCode, "invitation_code should be set in authURLOptions")
+	if hasInvitationCode {
+		// Should only have one value (the second one), not both
+		assert.Len(invitationCodeValues, 1, "invitation_code should have only one value when overwritten")
+		assert.Contains(invitationCodeValues, secondInvitationCode, "invitation_code should contain the last provided value")
+		assert.NotContains(invitationCodeValues, firstInvitationCode, "invitation_code should not contain the first value after overwrite")
+	}
+
+	isInvitationValues, hasIsInvitation := flow.authURLOptions["is_invitation"]
+	assert.True(hasIsInvitation, "is_invitation should be set in authURLOptions")
+	if hasIsInvitation {
+		// Should only have one value
+		assert.Len(isInvitationValues, 1, "is_invitation should have only one value")
+		assert.Contains(isInvitationValues, "true", "is_invitation should be 'true'")
+	}
+}
+
 func getTestAuthorizationServer() *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
