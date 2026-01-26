@@ -7150,8 +7150,8 @@ type GetConnectionsResponse struct {
 	// Response code.
 	Code OptString `json:"code"`
 	// Response message.
-	Message     OptString    `json:"message"`
-	Connections []Connection `json:"connections"`
+	Message     OptString              `json:"message"`
+	Connections []ConnectionConnection `json:"connections"`
 	// Whether more records exist.
 	HasMore OptBool `json:"has_more"`
 }
@@ -7167,7 +7167,7 @@ func (s *GetConnectionsResponse) GetMessage() OptString {
 }
 
 // GetConnections returns the value of Connections.
-func (s *GetConnectionsResponse) GetConnections() []Connection {
+func (s *GetConnectionsResponse) GetConnections() []ConnectionConnection {
 	return s.Connections
 }
 
@@ -7187,7 +7187,7 @@ func (s *GetConnectionsResponse) SetMessage(val OptString) {
 }
 
 // SetConnections sets the value of Connections.
-func (s *GetConnectionsResponse) SetConnections(val []Connection) {
+func (s *GetConnectionsResponse) SetConnections(val []ConnectionConnection) {
 	s.Connections = val
 }
 
