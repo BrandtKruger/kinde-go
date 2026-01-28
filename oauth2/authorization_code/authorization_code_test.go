@@ -107,12 +107,25 @@ func TestGetAuthURLWithInvitation(t *testing.T) {
 	assert.NotEmpty(authURL, "AuthURL cannot be empty")
 	assert.Contains(authURL, "invitation_code=inv_123456789", "AuthURL should contain invitation_code parameter")
 	assert.Contains(authURL, "is_invitation=true", "AuthURL should contain is_invitation parameter")
+	assert.Contains(authURL, "prompt=create", "AuthURL should contain prompt=create parameter when invitation code is provided")
 
 	// Test without invitation code (empty string)
 	authURLNoInvitation := kindeAuthFlow.GetAuthURLWithInvitation("")
 	assert.NotEmpty(authURLNoInvitation, "AuthURL cannot be empty")
 	assert.NotContains(authURLNoInvitation, "invitation_code", "AuthURL should not contain invitation_code when empty")
 	assert.NotContains(authURLNoInvitation, "is_invitation", "AuthURL should not contain is_invitation when empty")
+	assert.NotContains(authURLNoInvitation, "prompt=create", "AuthURL should not contain prompt=create when invitation code is empty")
+
+	// Test that existing prompt value is not overwritten
+	kindeAuthFlowWithPrompt, _ := NewAuthorizationCodeFlow(
+		testKindeServerURL, "b9da18c441b44d81bab3e8232de2e18d", "client_secret", callbackURL,
+		WithSessionHooks(newTestSessionHooks()),
+		WithCustomStateGenerator(func(*AuthorizationCodeFlow) string { return "test_state" }),
+		WithPrompt("login"), // Set a custom prompt
+	)
+	authURLWithCustomPrompt := kindeAuthFlowWithPrompt.GetAuthURLWithInvitation(invitationCode)
+	assert.Contains(authURLWithCustomPrompt, "prompt=login", "AuthURL should preserve custom prompt value")
+	assert.NotContains(authURLWithCustomPrompt, "prompt=create", "AuthURL should not overwrite custom prompt with create")
 }
 
 func TestWithInvitationCodeOption(t *testing.T) {

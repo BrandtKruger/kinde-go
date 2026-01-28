@@ -157,6 +157,9 @@ func (flow *AuthorizationCodeFlow) GetAuthURLWithInvitation(invitationCode strin
 	if invitationCode != "" {
 		query.Set("invitation_code", invitationCode)
 		query.Set("is_invitation", "true")
+		if query.Get("prompt") == "" {
+			query.Set("prompt", "create")
+		}
 	}
 
 	// Add PKCE parameters if enabled
