@@ -143,9 +143,16 @@ func TestWithInvitationCodeOption(t *testing.T) {
 		assert.Contains(isInvitationValues, "true", "is_invitation should be set to 'true'")
 	}
 
+	promptValues, hasPrompt := flow.authURLOptions["prompt"]
+	assert.True(hasPrompt, "prompt should be set in authURLOptions when invitation code is provided")
+	if hasPrompt {
+		assert.Contains(promptValues, "create", "prompt should be 'create' when invitation code is provided")
+	}
+
 	authURL := kindeAuthFlow.GetAuthURL()
 	assert.Contains(authURL, "invitation_code=inv_987654321", "AuthURL should contain invitation_code parameter")
 	assert.Contains(authURL, "is_invitation=true", "AuthURL should contain is_invitation parameter")
+	assert.Contains(authURL, "prompt=create", "AuthURL should contain prompt=create parameter")
 }
 
 func TestWithInvitationCodeOptionEmpty(t *testing.T) {
@@ -165,8 +172,10 @@ func TestWithInvitationCodeOptionEmpty(t *testing.T) {
 	flow := kindeAuthFlow.(*AuthorizationCodeFlow)
 	_, hasInvitationCode := flow.authURLOptions["invitation_code"]
 	_, hasIsInvitation := flow.authURLOptions["is_invitation"]
+	_, hasPrompt := flow.authURLOptions["prompt"]
 	assert.False(hasInvitationCode, "invitation_code should not be set when empty")
 	assert.False(hasIsInvitation, "is_invitation should not be set when empty")
+	assert.False(hasPrompt, "prompt should not be set when invitation code is empty")
 }
 
 func TestWithInvitationCodeOptionOverwrite(t *testing.T) {
@@ -202,6 +211,14 @@ func TestWithInvitationCodeOptionOverwrite(t *testing.T) {
 		// Should only have one value
 		assert.Len(isInvitationValues, 1, "is_invitation should have only one value")
 		assert.Contains(isInvitationValues, "true", "is_invitation should be 'true'")
+	}
+
+	promptValues, hasPrompt := flow.authURLOptions["prompt"]
+	assert.True(hasPrompt, "prompt should be set in authURLOptions when invitation code is provided")
+	if hasPrompt {
+		// Should only have one value
+		assert.Len(promptValues, 1, "prompt should have only one value")
+		assert.Contains(promptValues, "create", "prompt should be 'create' when invitation code is provided")
 	}
 }
 
