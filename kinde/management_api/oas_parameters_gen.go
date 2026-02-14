@@ -5,6 +5,7 @@ package management_api
 import (
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/go-faster/errors"
 
@@ -1483,8 +1484,8 @@ func decodeDeleteAPIParams(args [1]string, argsEscaped bool, r *http.Request) (p
 	return params, nil
 }
 
-// DeleteAPIAppliationScopeParams is parameters of deleteAPIAppliationScope operation.
-type DeleteAPIAppliationScopeParams struct {
+// DeleteAPIApplicationScopeParams is parameters of deleteAPIApplicationScope operation.
+type DeleteAPIApplicationScopeParams struct {
 	// API ID.
 	APIID string
 	// Application ID.
@@ -1493,7 +1494,7 @@ type DeleteAPIAppliationScopeParams struct {
 	ScopeID string
 }
 
-func unpackDeleteAPIAppliationScopeParams(packed middleware.Parameters) (params DeleteAPIAppliationScopeParams) {
+func unpackDeleteAPIApplicationScopeParams(packed middleware.Parameters) (params DeleteAPIApplicationScopeParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "api_id",
@@ -1518,7 +1519,7 @@ func unpackDeleteAPIAppliationScopeParams(packed middleware.Parameters) (params 
 	return params
 }
 
-func decodeDeleteAPIAppliationScopeParams(args [3]string, argsEscaped bool, r *http.Request) (params DeleteAPIAppliationScopeParams, _ error) {
+func decodeDeleteAPIApplicationScopeParams(args [3]string, argsEscaped bool, r *http.Request) (params DeleteAPIApplicationScopeParams, _ error) {
 	// Decode path: api_id.
 	if err := func() error {
 		param := args[0]
@@ -10123,10 +10124,13 @@ type GetUsersParams struct {
 	Username OptNilString
 	// Filter the results by phone. The query string should be comma separated and url encoded.
 	Phone OptNilString
-	// Specify additional data to retrieve. Use "organizations" and/or "identities".
+	// Specify additional data to retrieve. Use "organizations", "identities" and/or "billing".
 	Expand OptNilString
 	// Filter the results by if the user has at least one organization assigned.
 	HasOrganization OptNilBool
+	// Filter the results to only include users who have been active since this date. Date should be in
+	// ISO 8601 format.
+	ActiveSince OptNilDateTime
 }
 
 func unpackGetUsersParams(packed middleware.Parameters) (params GetUsersParams) {
@@ -10200,6 +10204,15 @@ func unpackGetUsersParams(packed middleware.Parameters) (params GetUsersParams) 
 		}
 		if v, ok := packed[key]; ok {
 			params.HasOrganization = v.(OptNilBool)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "active_since",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.ActiveSince = v.(OptNilDateTime)
 		}
 	}
 	return params
@@ -10531,6 +10544,47 @@ func decodeGetUsersParams(args [0]string, argsEscaped bool, r *http.Request) (pa
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "has_organization",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: active_since.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "active_since",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotActiveSinceVal time.Time
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToDateTime(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotActiveSinceVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.ActiveSince.SetTo(paramsDotActiveSinceVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "active_since",
 			In:   "query",
 			Err:  err,
 		}
@@ -12089,7 +12143,9 @@ type SearchUsersParams struct {
 	// Number of results per page. Defaults to 10 if parameter not sent.
 	PageSize OptNilInt
 	// Search the users by email or name. Use '*' to search all.
-	Query      OptNilString
+	Query OptNilString
+	// Search the users by api scopes.
+	APIScopes  OptNilString
 	Properties OptSearchUsersProperties
 	// The ID of the user to start after.
 	StartingAfter OptNilString
@@ -12116,6 +12172,15 @@ func unpackSearchUsersParams(packed middleware.Parameters) (params SearchUsersPa
 		}
 		if v, ok := packed[key]; ok {
 			params.Query = v.(OptNilString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "api_scopes",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.APIScopes = v.(OptNilString)
 		}
 	}
 	{
@@ -12237,6 +12302,47 @@ func decodeSearchUsersParams(args [0]string, argsEscaped bool, r *http.Request) 
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "query",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: api_scopes.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "api_scopes",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotAPIScopesVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotAPIScopesVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.APIScopes.SetTo(paramsDotAPIScopesVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "api_scopes",
 			In:   "query",
 			Err:  err,
 		}
