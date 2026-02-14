@@ -296,11 +296,6 @@ type AddOrganizationUsersForbidden ErrorResponse
 
 func (*AddOrganizationUsersForbidden) addOrganizationUsersRes() {}
 
-// AddOrganizationUsersNoContent is response for AddOrganizationUsers operation.
-type AddOrganizationUsersNoContent struct{}
-
-func (*AddOrganizationUsersNoContent) addOrganizationUsersRes() {}
-
 type AddOrganizationUsersReq struct {
 	// Users to be added to the organization.
 	Users []AddOrganizationUsersReqUsersItem `json:"users"`
@@ -699,11 +694,18 @@ func (s *Connection) SetConnection(val OptConnectionConnection) {
 
 func (*Connection) getConnectionRes() {}
 
+// Connection object (id, name, display_name, strategy); used in get_connections_response.connections
+// and connection.connection.
+// Ref: #/components/schemas/connection_connection
 type ConnectionConnection struct {
-	ID          OptString `json:"id"`
-	Name        OptString `json:"name"`
+	// The connection's ID.
+	ID OptString `json:"id"`
+	// The connection name.
+	Name OptString `json:"name"`
+	// The public facing name of the connection.
 	DisplayName OptString `json:"display_name"`
-	Strategy    OptString `json:"strategy"`
+	// The identity provider identifier for the connection.
+	Strategy OptString `json:"strategy"`
 }
 
 // GetID returns the value of ID.
@@ -881,6 +883,8 @@ func (*CreateApiKeyForbidden) createApiKeyRes() {}
 type CreateApiKeyReq struct {
 	// The name of the API key.
 	Name string `json:"name"`
+	// The entity type that will use this API key.
+	Type CreateApiKeyReqType `json:"type"`
 	// The ID of the API this key is associated with.
 	APIID string `json:"api_id"`
 	// Array of scope IDs to associate with this API key.
@@ -894,6 +898,11 @@ type CreateApiKeyReq struct {
 // GetName returns the value of Name.
 func (s *CreateApiKeyReq) GetName() string {
 	return s.Name
+}
+
+// GetType returns the value of Type.
+func (s *CreateApiKeyReq) GetType() CreateApiKeyReqType {
+	return s.Type
 }
 
 // GetAPIID returns the value of APIID.
@@ -921,6 +930,11 @@ func (s *CreateApiKeyReq) SetName(val string) {
 	s.Name = val
 }
 
+// SetType sets the value of Type.
+func (s *CreateApiKeyReq) SetType(val CreateApiKeyReqType) {
+	s.Type = val
+}
+
 // SetAPIID sets the value of APIID.
 func (s *CreateApiKeyReq) SetAPIID(val string) {
 	s.APIID = val
@@ -939,6 +953,55 @@ func (s *CreateApiKeyReq) SetUserID(val OptNilString) {
 // SetOrgCode sets the value of OrgCode.
 func (s *CreateApiKeyReq) SetOrgCode(val OptNilString) {
 	s.OrgCode = val
+}
+
+// The entity type that will use this API key.
+type CreateApiKeyReqType string
+
+const (
+	CreateApiKeyReqTypeUser         CreateApiKeyReqType = "user"
+	CreateApiKeyReqTypeOrganization CreateApiKeyReqType = "organization"
+	CreateApiKeyReqTypeEnvironment  CreateApiKeyReqType = "environment"
+)
+
+// AllValues returns all CreateApiKeyReqType values.
+func (CreateApiKeyReqType) AllValues() []CreateApiKeyReqType {
+	return []CreateApiKeyReqType{
+		CreateApiKeyReqTypeUser,
+		CreateApiKeyReqTypeOrganization,
+		CreateApiKeyReqTypeEnvironment,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CreateApiKeyReqType) MarshalText() ([]byte, error) {
+	switch s {
+	case CreateApiKeyReqTypeUser:
+		return []byte(s), nil
+	case CreateApiKeyReqTypeOrganization:
+		return []byte(s), nil
+	case CreateApiKeyReqTypeEnvironment:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CreateApiKeyReqType) UnmarshalText(data []byte) error {
+	switch CreateApiKeyReqType(data) {
+	case CreateApiKeyReqTypeUser:
+		*s = CreateApiKeyReqTypeUser
+		return nil
+	case CreateApiKeyReqTypeOrganization:
+		*s = CreateApiKeyReqTypeOrganization
+		return nil
+	case CreateApiKeyReqTypeEnvironment:
+		*s = CreateApiKeyReqTypeEnvironment
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 type CreateApiKeyTooManyRequests ErrorResponse
@@ -1777,8 +1840,6 @@ type CreateConnectionReqOptions2 struct {
 	HomeRealmDomains []string `json:"home_realm_domains"`
 	// SAML Entity ID.
 	SamlEntityID OptString `json:"saml_entity_id"`
-	// Assertion Consumer Service URL.
-	SamlAcsURL OptString `json:"saml_acs_url"`
 	// URL for the IdP metadata.
 	SamlIdpMetadataURL OptString `json:"saml_idp_metadata_url"`
 	// Override the default SSO endpoint with a URL your IdP recognizes.
@@ -1811,11 +1872,6 @@ func (s *CreateConnectionReqOptions2) GetHomeRealmDomains() []string {
 // GetSamlEntityID returns the value of SamlEntityID.
 func (s *CreateConnectionReqOptions2) GetSamlEntityID() OptString {
 	return s.SamlEntityID
-}
-
-// GetSamlAcsURL returns the value of SamlAcsURL.
-func (s *CreateConnectionReqOptions2) GetSamlAcsURL() OptString {
-	return s.SamlAcsURL
 }
 
 // GetSamlIdpMetadataURL returns the value of SamlIdpMetadataURL.
@@ -1881,11 +1937,6 @@ func (s *CreateConnectionReqOptions2) SetHomeRealmDomains(val []string) {
 // SetSamlEntityID sets the value of SamlEntityID.
 func (s *CreateConnectionReqOptions2) SetSamlEntityID(val OptString) {
 	s.SamlEntityID = val
-}
-
-// SetSamlAcsURL sets the value of SamlAcsURL.
-func (s *CreateConnectionReqOptions2) SetSamlAcsURL(val OptString) {
-	s.SamlAcsURL = val
 }
 
 // SetSamlIdpMetadataURL sets the value of SamlIdpMetadataURL.
@@ -1976,6 +2027,10 @@ const (
 	CreateConnectionReqStrategyOAuth2Twitter   CreateConnectionReqStrategy = "oauth2:twitter"
 	CreateConnectionReqStrategyOAuth2Xero      CreateConnectionReqStrategy = "oauth2:xero"
 	CreateConnectionReqStrategySamlCustom      CreateConnectionReqStrategy = "saml:custom"
+	CreateConnectionReqStrategySamlCloudflare  CreateConnectionReqStrategy = "saml:cloudflare"
+	CreateConnectionReqStrategySamlOkta        CreateConnectionReqStrategy = "saml:okta"
+	CreateConnectionReqStrategySamlMicrosoft   CreateConnectionReqStrategy = "saml:microsoft"
+	CreateConnectionReqStrategySamlGoogle      CreateConnectionReqStrategy = "saml:google"
 	CreateConnectionReqStrategyWsfedAzureAd    CreateConnectionReqStrategy = "wsfed:azure_ad"
 )
 
@@ -1999,6 +2054,10 @@ func (CreateConnectionReqStrategy) AllValues() []CreateConnectionReqStrategy {
 		CreateConnectionReqStrategyOAuth2Twitter,
 		CreateConnectionReqStrategyOAuth2Xero,
 		CreateConnectionReqStrategySamlCustom,
+		CreateConnectionReqStrategySamlCloudflare,
+		CreateConnectionReqStrategySamlOkta,
+		CreateConnectionReqStrategySamlMicrosoft,
+		CreateConnectionReqStrategySamlGoogle,
 		CreateConnectionReqStrategyWsfedAzureAd,
 	}
 }
@@ -2039,6 +2098,14 @@ func (s CreateConnectionReqStrategy) MarshalText() ([]byte, error) {
 	case CreateConnectionReqStrategyOAuth2Xero:
 		return []byte(s), nil
 	case CreateConnectionReqStrategySamlCustom:
+		return []byte(s), nil
+	case CreateConnectionReqStrategySamlCloudflare:
+		return []byte(s), nil
+	case CreateConnectionReqStrategySamlOkta:
+		return []byte(s), nil
+	case CreateConnectionReqStrategySamlMicrosoft:
+		return []byte(s), nil
+	case CreateConnectionReqStrategySamlGoogle:
 		return []byte(s), nil
 	case CreateConnectionReqStrategyWsfedAzureAd:
 		return []byte(s), nil
@@ -2100,6 +2167,18 @@ func (s *CreateConnectionReqStrategy) UnmarshalText(data []byte) error {
 		return nil
 	case CreateConnectionReqStrategySamlCustom:
 		*s = CreateConnectionReqStrategySamlCustom
+		return nil
+	case CreateConnectionReqStrategySamlCloudflare:
+		*s = CreateConnectionReqStrategySamlCloudflare
+		return nil
+	case CreateConnectionReqStrategySamlOkta:
+		*s = CreateConnectionReqStrategySamlOkta
+		return nil
+	case CreateConnectionReqStrategySamlMicrosoft:
+		*s = CreateConnectionReqStrategySamlMicrosoft
+		return nil
+	case CreateConnectionReqStrategySamlGoogle:
+		*s = CreateConnectionReqStrategySamlGoogle
 		return nil
 	case CreateConnectionReqStrategyWsfedAzureAd:
 		*s = CreateConnectionReqStrategyWsfedAzureAd
@@ -4093,22 +4172,22 @@ func (s *CreateWebhookResponseWebhook) SetEndpoint(val OptString) {
 	s.Endpoint = val
 }
 
-type DeleteAPIAppliationScopeBadRequest ErrorResponse
+type DeleteAPIApplicationScopeBadRequest ErrorResponse
 
-func (*DeleteAPIAppliationScopeBadRequest) deleteAPIAppliationScopeRes() {}
+func (*DeleteAPIApplicationScopeBadRequest) deleteAPIApplicationScopeRes() {}
 
-type DeleteAPIAppliationScopeForbidden ErrorResponse
+type DeleteAPIApplicationScopeForbidden ErrorResponse
 
-func (*DeleteAPIAppliationScopeForbidden) deleteAPIAppliationScopeRes() {}
+func (*DeleteAPIApplicationScopeForbidden) deleteAPIApplicationScopeRes() {}
 
-// DeleteAPIAppliationScopeOK is response for DeleteAPIAppliationScope operation.
-type DeleteAPIAppliationScopeOK struct{}
+// DeleteAPIApplicationScopeOK is response for DeleteAPIApplicationScope operation.
+type DeleteAPIApplicationScopeOK struct{}
 
-func (*DeleteAPIAppliationScopeOK) deleteAPIAppliationScopeRes() {}
+func (*DeleteAPIApplicationScopeOK) deleteAPIApplicationScopeRes() {}
 
-type DeleteAPIAppliationScopeTooManyRequests ErrorResponse
+type DeleteAPIApplicationScopeTooManyRequests ErrorResponse
 
-func (*DeleteAPIAppliationScopeTooManyRequests) deleteAPIAppliationScopeRes() {}
+func (*DeleteAPIApplicationScopeTooManyRequests) deleteAPIApplicationScopeRes() {}
 
 type DeleteAPIBadRequest ErrorResponse
 
@@ -8748,7 +8827,9 @@ type GetOrganizationResponse struct {
 	// The organization's SVG favicon URL. Optimal format for most browsers.
 	FaviconSvg OptNilString `json:"favicon_svg"`
 	// The favicon URL to be used as a fallback in browsers that don't support SVG, add a PNG.
-	FaviconFallback     OptNilString                                     `json:"favicon_fallback"`
+	FaviconFallback OptNilString `json:"favicon_fallback"`
+	// Domains allowed for self-sign up to this environment.  Empty array means no restrictions.
+	AllowedDomains      []string                                         `json:"allowed_domains"`
 	LinkColor           OptNilGetOrganizationResponseLinkColor           `json:"link_color"`
 	BackgroundColor     OptNilGetOrganizationResponseBackgroundColor     `json:"background_color"`
 	ButtonColor         OptNilGetOrganizationResponseButtonColor         `json:"button_color"`
@@ -8829,6 +8910,11 @@ func (s *GetOrganizationResponse) GetFaviconSvg() OptNilString {
 // GetFaviconFallback returns the value of FaviconFallback.
 func (s *GetOrganizationResponse) GetFaviconFallback() OptNilString {
 	return s.FaviconFallback
+}
+
+// GetAllowedDomains returns the value of AllowedDomains.
+func (s *GetOrganizationResponse) GetAllowedDomains() []string {
+	return s.AllowedDomains
 }
 
 // GetLinkColor returns the value of LinkColor.
@@ -8969,6 +9055,11 @@ func (s *GetOrganizationResponse) SetFaviconSvg(val OptNilString) {
 // SetFaviconFallback sets the value of FaviconFallback.
 func (s *GetOrganizationResponse) SetFaviconFallback(val OptNilString) {
 	s.FaviconFallback = val
+}
+
+// SetAllowedDomains sets the value of AllowedDomains.
+func (s *GetOrganizationResponse) SetAllowedDomains(val []string) {
+	s.AllowedDomains = val
 }
 
 // SetLinkColor sets the value of LinkColor.
@@ -16194,6 +16285,69 @@ func (o OptNilUpdateOrganizationExpand) Or(d UpdateOrganizationExpand) UpdateOrg
 	return d
 }
 
+// NewOptNilUsersResponseUsersItemLastOrganizationSignInsItemArray returns new OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray with value set to v.
+func NewOptNilUsersResponseUsersItemLastOrganizationSignInsItemArray(v []UsersResponseUsersItemLastOrganizationSignInsItem) OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray {
+	return OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray is optional nullable []UsersResponseUsersItemLastOrganizationSignInsItem.
+type OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray struct {
+	Value []UsersResponseUsersItemLastOrganizationSignInsItem
+	Set   bool
+	Null  bool
+}
+
+// IsSet returns true if OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray was set.
+func (o OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray) Reset() {
+	var v []UsersResponseUsersItemLastOrganizationSignInsItem
+	o.Value = v
+	o.Set = false
+	o.Null = false
+}
+
+// SetTo sets value to v.
+func (o *OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray) SetTo(v []UsersResponseUsersItemLastOrganizationSignInsItem) {
+	o.Set = true
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray) SetToNull() {
+	o.Set = true
+	o.Null = true
+	var v []UsersResponseUsersItemLastOrganizationSignInsItem
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray) Get() (v []UsersResponseUsersItemLastOrganizationSignInsItem, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray) Or(d []UsersResponseUsersItemLastOrganizationSignInsItem) []UsersResponseUsersItemLastOrganizationSignInsItem {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptNotFoundResponseErrors returns new OptNotFoundResponseErrors with value set to v.
 func NewOptNotFoundResponseErrors(v NotFoundResponseErrors) OptNotFoundResponseErrors {
 	return OptNotFoundResponseErrors{
@@ -17160,6 +17314,52 @@ func (o OptUpdateWebhookResponseWebhook) Or(d UpdateWebhookResponseWebhook) Upda
 	return d
 }
 
+// NewOptUserBilling returns new OptUserBilling with value set to v.
+func NewOptUserBilling(v UserBilling) OptUserBilling {
+	return OptUserBilling{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptUserBilling is optional UserBilling.
+type OptUserBilling struct {
+	Value UserBilling
+	Set   bool
+}
+
+// IsSet returns true if OptUserBilling was set.
+func (o OptUserBilling) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptUserBilling) Reset() {
+	var v UserBilling
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptUserBilling) SetTo(v UserBilling) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptUserBilling) Get() (v UserBilling, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptUserBilling) Or(d UserBilling) UserBilling {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptUserIdentityResult returns new OptUserIdentityResult with value set to v.
 func NewOptUserIdentityResult(v UserIdentityResult) OptUserIdentityResult {
 	return OptUserIdentityResult{
@@ -17347,6 +17547,8 @@ type OrganizationUser struct {
 	JoinedOn OptString `json:"joined_on"`
 	// The date the user last accessed the organization.
 	LastAccessedOn OptNilString `json:"last_accessed_on"`
+	// Whether the user is currently suspended or not.
+	IsSuspended OptBool `json:"is_suspended"`
 	// The roles the user has in the organization.
 	Roles []string `json:"roles"`
 }
@@ -17389,6 +17591,11 @@ func (s *OrganizationUser) GetJoinedOn() OptString {
 // GetLastAccessedOn returns the value of LastAccessedOn.
 func (s *OrganizationUser) GetLastAccessedOn() OptNilString {
 	return s.LastAccessedOn
+}
+
+// GetIsSuspended returns the value of IsSuspended.
+func (s *OrganizationUser) GetIsSuspended() OptBool {
+	return s.IsSuspended
 }
 
 // GetRoles returns the value of Roles.
@@ -17434,6 +17641,11 @@ func (s *OrganizationUser) SetJoinedOn(val OptString) {
 // SetLastAccessedOn sets the value of LastAccessedOn.
 func (s *OrganizationUser) SetLastAccessedOn(val OptNilString) {
 	s.LastAccessedOn = val
+}
+
+// SetIsSuspended sets the value of IsSuspended.
+func (s *OrganizationUser) SetIsSuspended(val OptBool) {
+	s.IsSuspended = val
 }
 
 // SetRoles sets the value of Roles.
@@ -18340,8 +18552,6 @@ type ReplaceConnectionReqOptions2 struct {
 	HomeRealmDomains []string `json:"home_realm_domains"`
 	// SAML Entity ID.
 	SamlEntityID OptString `json:"saml_entity_id"`
-	// Assertion Consumer Service URL.
-	SamlAcsURL OptString `json:"saml_acs_url"`
 	// URL for the IdP metadata.
 	SamlIdpMetadataURL OptString `json:"saml_idp_metadata_url"`
 	// Attribute key for the user’s email.
@@ -18370,11 +18580,6 @@ func (s *ReplaceConnectionReqOptions2) GetHomeRealmDomains() []string {
 // GetSamlEntityID returns the value of SamlEntityID.
 func (s *ReplaceConnectionReqOptions2) GetSamlEntityID() OptString {
 	return s.SamlEntityID
-}
-
-// GetSamlAcsURL returns the value of SamlAcsURL.
-func (s *ReplaceConnectionReqOptions2) GetSamlAcsURL() OptString {
-	return s.SamlAcsURL
 }
 
 // GetSamlIdpMetadataURL returns the value of SamlIdpMetadataURL.
@@ -18430,11 +18635,6 @@ func (s *ReplaceConnectionReqOptions2) SetHomeRealmDomains(val []string) {
 // SetSamlEntityID sets the value of SamlEntityID.
 func (s *ReplaceConnectionReqOptions2) SetSamlEntityID(val OptString) {
 	s.SamlEntityID = val
-}
-
-// SetSamlAcsURL sets the value of SamlAcsURL.
-func (s *ReplaceConnectionReqOptions2) SetSamlAcsURL(val OptString) {
-	s.SamlAcsURL = val
 }
 
 // SetSamlIdpMetadataURL sets the value of SamlIdpMetadataURL.
@@ -19208,6 +19408,8 @@ type SearchUsersResponseResultsItem struct {
 	Identities []SearchUsersResponseResultsItemIdentitiesItem `json:"identities"`
 	// The user properties.
 	Properties OptSearchUsersResponseResultsItemProperties `json:"properties"`
+	// Array of api scopes belonging to the user.
+	APIScopes []SearchUsersResponseResultsItemAPIScopesItem `json:"api_scopes"`
 }
 
 // GetID returns the value of ID.
@@ -19285,6 +19487,11 @@ func (s *SearchUsersResponseResultsItem) GetProperties() OptSearchUsersResponseR
 	return s.Properties
 }
 
+// GetAPIScopes returns the value of APIScopes.
+func (s *SearchUsersResponseResultsItem) GetAPIScopes() []SearchUsersResponseResultsItemAPIScopesItem {
+	return s.APIScopes
+}
+
 // SetID sets the value of ID.
 func (s *SearchUsersResponseResultsItem) SetID(val OptString) {
 	s.ID = val
@@ -19358,6 +19565,47 @@ func (s *SearchUsersResponseResultsItem) SetIdentities(val []SearchUsersResponse
 // SetProperties sets the value of Properties.
 func (s *SearchUsersResponseResultsItem) SetProperties(val OptSearchUsersResponseResultsItemProperties) {
 	s.Properties = val
+}
+
+// SetAPIScopes sets the value of APIScopes.
+func (s *SearchUsersResponseResultsItem) SetAPIScopes(val []SearchUsersResponseResultsItemAPIScopesItem) {
+	s.APIScopes = val
+}
+
+type SearchUsersResponseResultsItemAPIScopesItem struct {
+	OrgCode OptString `json:"org_code"`
+	Scope   OptString `json:"scope"`
+	APIID   OptString `json:"api_id"`
+}
+
+// GetOrgCode returns the value of OrgCode.
+func (s *SearchUsersResponseResultsItemAPIScopesItem) GetOrgCode() OptString {
+	return s.OrgCode
+}
+
+// GetScope returns the value of Scope.
+func (s *SearchUsersResponseResultsItemAPIScopesItem) GetScope() OptString {
+	return s.Scope
+}
+
+// GetAPIID returns the value of APIID.
+func (s *SearchUsersResponseResultsItemAPIScopesItem) GetAPIID() OptString {
+	return s.APIID
+}
+
+// SetOrgCode sets the value of OrgCode.
+func (s *SearchUsersResponseResultsItemAPIScopesItem) SetOrgCode(val OptString) {
+	s.OrgCode = val
+}
+
+// SetScope sets the value of Scope.
+func (s *SearchUsersResponseResultsItemAPIScopesItem) SetScope(val OptString) {
+	s.Scope = val
+}
+
+// SetAPIID sets the value of APIID.
+func (s *SearchUsersResponseResultsItemAPIScopesItem) SetAPIID(val OptString) {
+	s.APIID = val
 }
 
 type SearchUsersResponseResultsItemIdentitiesItem struct {
@@ -20629,8 +20877,6 @@ type UpdateConnectionReqOptions2 struct {
 	HomeRealmDomains []string `json:"home_realm_domains"`
 	// SAML Entity ID.
 	SamlEntityID OptString `json:"saml_entity_id"`
-	// Assertion Consumer Service URL.
-	SamlAcsURL OptString `json:"saml_acs_url"`
 	// URL for the IdP metadata.
 	SamlIdpMetadataURL OptString `json:"saml_idp_metadata_url"`
 	// Attribute key for the user’s email.
@@ -20659,11 +20905,6 @@ func (s *UpdateConnectionReqOptions2) GetHomeRealmDomains() []string {
 // GetSamlEntityID returns the value of SamlEntityID.
 func (s *UpdateConnectionReqOptions2) GetSamlEntityID() OptString {
 	return s.SamlEntityID
-}
-
-// GetSamlAcsURL returns the value of SamlAcsURL.
-func (s *UpdateConnectionReqOptions2) GetSamlAcsURL() OptString {
-	return s.SamlAcsURL
 }
 
 // GetSamlIdpMetadataURL returns the value of SamlIdpMetadataURL.
@@ -20719,11 +20960,6 @@ func (s *UpdateConnectionReqOptions2) SetHomeRealmDomains(val []string) {
 // SetSamlEntityID sets the value of SamlEntityID.
 func (s *UpdateConnectionReqOptions2) SetSamlEntityID(val OptString) {
 	s.SamlEntityID = val
-}
-
-// SetSamlAcsURL sets the value of SamlAcsURL.
-func (s *UpdateConnectionReqOptions2) SetSamlAcsURL(val OptString) {
-	s.SamlAcsURL = val
 }
 
 // SetSamlIdpMetadataURL sets the value of SamlIdpMetadataURL.
@@ -21456,7 +21692,7 @@ type UpdateOrganizationSessionsReqSSOSessionPersistenceMode string
 
 const (
 	UpdateOrganizationSessionsReqSSOSessionPersistenceModePersistent    UpdateOrganizationSessionsReqSSOSessionPersistenceMode = "persistent"
-	UpdateOrganizationSessionsReqSSOSessionPersistenceModeNonPersistent UpdateOrganizationSessionsReqSSOSessionPersistenceMode = "non-persistent"
+	UpdateOrganizationSessionsReqSSOSessionPersistenceModeNonPersistent UpdateOrganizationSessionsReqSSOSessionPersistenceMode = "non_persistent"
 )
 
 // AllValues returns all UpdateOrganizationSessionsReqSSOSessionPersistenceMode values.
@@ -21867,8 +22103,8 @@ type UpdateRolesReq struct {
 	Key string `json:"key"`
 	// Set role as default for new users.
 	IsDefaultRole OptBool `json:"is_default_role"`
-	// The public ID of the permission required to assign this role to users. If null, no permission is
-	// required.
+	// The public ID of the permission required to assign this role to users. If null, no change to the
+	// assignment permission is made. If set to 'NO_PERMISSION_REQUIRED', no permission is required.
 	AssignmentPermissionID OptNilUUID `json:"assignment_permission_id"`
 }
 
@@ -22288,6 +22524,7 @@ type User struct {
 	Organizations []string `json:"organizations"`
 	// Array of identities belonging to the user.
 	Identities []UserIdentitiesItem `json:"identities"`
+	Billing    OptUserBilling       `json:"billing"`
 }
 
 // GetID returns the value of ID.
@@ -22365,6 +22602,11 @@ func (s *User) GetIdentities() []UserIdentitiesItem {
 	return s.Identities
 }
 
+// GetBilling returns the value of Billing.
+func (s *User) GetBilling() OptUserBilling {
+	return s.Billing
+}
+
 // SetID sets the value of ID.
 func (s *User) SetID(val OptString) {
 	s.ID = val
@@ -22440,7 +22682,26 @@ func (s *User) SetIdentities(val []UserIdentitiesItem) {
 	s.Identities = val
 }
 
+// SetBilling sets the value of Billing.
+func (s *User) SetBilling(val OptUserBilling) {
+	s.Billing = val
+}
+
 func (*User) getUserDataRes() {}
+
+type UserBilling struct {
+	CustomerID OptString `json:"customer_id"`
+}
+
+// GetCustomerID returns the value of CustomerID.
+func (s *UserBilling) GetCustomerID() OptString {
+	return s.CustomerID
+}
+
+// SetCustomerID sets the value of CustomerID.
+func (s *UserBilling) SetCustomerID(val OptString) {
+	s.CustomerID = val
+}
 
 type UserIdentitiesItem struct {
 	Type     OptString `json:"type"`
@@ -22591,6 +22852,8 @@ type UsersResponseUsersItem struct {
 	LastSignedIn OptNilString `json:"last_signed_in"`
 	// Date of user creation in ISO 8601 format.
 	CreatedOn OptNilString `json:"created_on"`
+	// Array of organization sign-in information for the user.
+	LastOrganizationSignIns OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray `json:"last_organization_sign_ins"`
 	// Array of organizations a user belongs to.
 	Organizations []string `json:"organizations"`
 	// Array of identities belonging to the user.
@@ -22661,6 +22924,11 @@ func (s *UsersResponseUsersItem) GetLastSignedIn() OptNilString {
 // GetCreatedOn returns the value of CreatedOn.
 func (s *UsersResponseUsersItem) GetCreatedOn() OptNilString {
 	return s.CreatedOn
+}
+
+// GetLastOrganizationSignIns returns the value of LastOrganizationSignIns.
+func (s *UsersResponseUsersItem) GetLastOrganizationSignIns() OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray {
+	return s.LastOrganizationSignIns
 }
 
 // GetOrganizations returns the value of Organizations.
@@ -22743,6 +23011,11 @@ func (s *UsersResponseUsersItem) SetCreatedOn(val OptNilString) {
 	s.CreatedOn = val
 }
 
+// SetLastOrganizationSignIns sets the value of LastOrganizationSignIns.
+func (s *UsersResponseUsersItem) SetLastOrganizationSignIns(val OptNilUsersResponseUsersItemLastOrganizationSignInsItemArray) {
+	s.LastOrganizationSignIns = val
+}
+
 // SetOrganizations sets the value of Organizations.
 func (s *UsersResponseUsersItem) SetOrganizations(val []string) {
 	s.Organizations = val
@@ -22796,6 +23069,33 @@ func (s *UsersResponseUsersItemIdentitiesItem) SetType(val OptString) {
 // SetIdentity sets the value of Identity.
 func (s *UsersResponseUsersItemIdentitiesItem) SetIdentity(val OptString) {
 	s.Identity = val
+}
+
+type UsersResponseUsersItemLastOrganizationSignInsItem struct {
+	// The organization code.
+	OrgCode OptString `json:"org_code"`
+	// The date and time the user last signed in to this organization in ISO 8601 format.
+	LastSignedIn OptDateTime `json:"last_signed_in"`
+}
+
+// GetOrgCode returns the value of OrgCode.
+func (s *UsersResponseUsersItemLastOrganizationSignInsItem) GetOrgCode() OptString {
+	return s.OrgCode
+}
+
+// GetLastSignedIn returns the value of LastSignedIn.
+func (s *UsersResponseUsersItemLastOrganizationSignInsItem) GetLastSignedIn() OptDateTime {
+	return s.LastSignedIn
+}
+
+// SetOrgCode sets the value of OrgCode.
+func (s *UsersResponseUsersItemLastOrganizationSignInsItem) SetOrgCode(val OptString) {
+	s.OrgCode = val
+}
+
+// SetLastSignedIn sets the value of LastSignedIn.
+func (s *UsersResponseUsersItemLastOrganizationSignInsItem) SetLastSignedIn(val OptDateTime) {
+	s.LastSignedIn = val
 }
 
 // Ref: #/components/schemas/verify_api_key_response
